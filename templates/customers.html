@@ -49,7 +49,29 @@
         
         </button>
 
+        <button
+            type="button"
+            class="btn btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#deleteAllModal">
+
+            Delete All
+
+        </button>
+
     </div>
+
+    {% if success %}
+        <div class="alert alert-success">
+            {{ success }}
+        </div>
+    {% endif %}
+
+    {% if error %}
+        <div class="alert alert-danger">
+            {{ error }}
+        </div>
+    {% endif %}
 
     <div class="row">
 
@@ -151,6 +173,14 @@
 
                 <div class="input-group mb-3">
 
+                    <input type="hidden"
+                           name="sort_by"
+                           value="{{ sort_by }}">
+
+                    <input type="hidden"
+                           name="sort_order"
+                           value="{{ sort_order }}">
+
                     <input type="text"
                            name="search"
                            class="form-control"
@@ -171,11 +201,35 @@
 
                 <tr>
 
-                    <th>ID</th>
-                    <th>Name</th>
+                    <th>
+                        <a href="/customers?search={{ search | urlencode }}&sort_by=id&sort_order={% if sort_by == 'id' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                           class="text-dark text-decoration-none d-block">
+                            ID
+                            {% if sort_by == 'id' %}
+                                {% if sort_order == 'asc' %}&uarr;{% else %}&darr;{% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a href="/customers?search={{ search | urlencode }}&sort_by=name&sort_order={% if sort_by == 'name' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                           class="text-dark text-decoration-none d-block">
+                            Name
+                            {% if sort_by == 'name' %}
+                                {% if sort_order == 'asc' %}&uarr;{% else %}&darr;{% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
                     <th>Address</th>
                     <th>Phone</th>
-                    <th>Date</th>
+                    <th>
+                        <a href="/customers?search={{ search | urlencode }}&sort_by=date&sort_order={% if sort_by == 'date' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                           class="text-dark text-decoration-none d-block">
+                            Date
+                            {% if sort_by == 'date' %}
+                                {% if sort_order == 'asc' %}&uarr;{% else %}&darr;{% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
                     <th>Total</th>
                     <th>Closed</th>
                     <th>Pending</th>
@@ -236,7 +290,7 @@
                         <li class="page-item">
 
                             <a class="page-link"
-                               href="/customers?page={{p}}">
+                               href="/customers?page={{p}}&search={{ search | urlencode }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}">
 
                                 {{p}}
 
@@ -249,6 +303,79 @@
                 </ul>
 
             </nav>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade"
+     id="deleteAllModal"
+     tabindex="-1">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    Delete All Customers?
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <form
+                action="/customers/delete-all"
+                method="post">
+
+                <div class="modal-body">
+
+                    <p>
+                        This will permanently delete every customer record.
+                    </p>
+
+                    <label class="form-label">
+                        Admin Password
+                    </label>
+
+                    <input
+                        type="password"
+                        name="admin_password"
+                        class="form-control"
+                        required>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger">
+
+                        Delete All
+
+                    </button>
+
+                </div>
+
+            </form>
 
         </div>
 

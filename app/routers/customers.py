@@ -18,8 +18,10 @@ from sqlalchemy import or_
 
 from datetime import datetime
 
+from app.auth import verify_password
 from app.database import get_db
 from app.models import Customer
+from app.models import User
 
 from app.services.excel_export import generate_excel
 
@@ -33,6 +35,10 @@ def customers(
     request: Request,
     page: int = 1,
     search: str = "",
+    sort_by: str = "id",
+    sort_order: str = "asc",
+    success: str = "",
+    error: str = "",
     db: Session = Depends(get_db)
 ):
 
@@ -53,8 +59,27 @@ def customers(
 
     total_records = query.count()
 
+    sort_columns = {
+        "id": Customer.id,
+        "name": Customer.customer_name,
+        "date": Customer.call_date
+    }
+
+    if sort_by not in sort_columns:
+        sort_by = "id"
+
+    if sort_order not in ["asc", "desc"]:
+        sort_order = "asc"
+
+    sort_column = sort_columns[sort_by]
+
+    if sort_order == "desc":
+        sort_column = sort_column.desc()
+    else:
+        sort_column = sort_column.asc()
+
     customers = (
-        query.order_by(Customer.id.desc())
+        query.order_by(sort_column)
         .offset((page - 1) * per_page)
         .limit(per_page)
         .all()
@@ -73,6 +98,10 @@ def customers(
             "page": page,
             "total_pages": total_pages,
             "search": search,
+            "sort_by": sort_by,
+            "sort_order": sort_order,
+            "success": success,
+            "error": error,
             "edit_customer": None
         }
     )
@@ -122,7 +151,7 @@ def edit_customer(
 
     customers = (
         db.query(Customer)
-        .order_by(Customer.id.desc())
+        .order_by(Customer.id.asc())
         .all()
     )
 
@@ -140,7 +169,11 @@ def edit_customer(
             "edit_customer": customer,
             "page": 1,
             "total_pages": 1,
-            "search": ""
+            "search": "",
+            "sort_by": "id",
+            "sort_order": "asc",
+            "success": "",
+            "error": ""
         }
     )
 
@@ -188,8 +221,12 @@ def update_customer(
 @router.get("/customers/delete/{customer_id}")
 def delete_customer(
     customer_id: int,
+    request: Request,
     db: Session = Depends(get_db)
 ):
+
+    if "user" not in request.session:
+        return RedirectResponse("/", status_code=302)
 
     customer = (
         db.query(Customer)
@@ -203,6 +240,41 @@ def delete_customer(
 
     return RedirectResponse(
         "/customers",
+        status_code=303
+    )
+
+
+@router.post("/customers/delete-all")
+def delete_all_customers(
+    request: Request,
+    admin_password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+
+    if "user" not in request.session:
+        return RedirectResponse("/", status_code=302)
+
+    user = (
+        db.query(User)
+        .filter(User.username == request.session["user"])
+        .first()
+    )
+
+    if not user:
+        request.session.clear()
+        return RedirectResponse("/", status_code=302)
+
+    if not verify_password(admin_password, user.password):
+        return RedirectResponse(
+            "/customers?error=Admin+password+is+incorrect",
+            status_code=303
+        )
+
+    db.query(Customer).delete()
+    db.commit()
+
+    return RedirectResponse(
+        "/customers?success=All+customers+deleted",
         status_code=303
     )
 
