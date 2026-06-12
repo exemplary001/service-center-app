@@ -42,6 +42,9 @@ app.include_router(settings.router)
 @app.on_event("startup")
 def load_sample_excel():
 
+    if os.getenv("LOAD_SAMPLE_DATA", "false").lower() != "true":
+        return
+
     db = SessionLocal()
 
     try:

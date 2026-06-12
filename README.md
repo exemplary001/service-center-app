@@ -1,6 +1,6 @@
 # Service Center Call Tracker
 
-A simple Service Center Call Tracking application built using FastAPI, SQLite, HTML, CSS, and JavaScript.
+A simple Service Center Call Tracking application built using FastAPI, SQLAlchemy, HTML, CSS, and JavaScript.
 
 ## Features
 
@@ -14,7 +14,7 @@ A simple Service Center Call Tracking application built using FastAPI, SQLite, H
 * Search by Phone Number
 * Pending Call Calculation
 * Excel Export
-* SQLite Database
+* SQLite or PostgreSQL Database
 * Session Authentication
 * Auto Import Sample Excel Data
 * Single Command Startup
@@ -132,6 +132,8 @@ APP_NAME=Service Center Call Tracker
 
 DATABASE_URL=sqlite:///database/service_center.db
 
+LOAD_SAMPLE_DATA=true
+
 SECRET_KEY=change_this_to_a_long_random_secret_key
 
 ADMIN_USERNAME=admin
@@ -140,6 +142,17 @@ ADMIN_PASSWORD=admin123
 
 SESSION_COOKIE_NAME=service_center_session
 ```
+
+For Render Free, use an external PostgreSQL database such as Neon and set `DATABASE_URL`
+to the connection string from that database:
+
+```env
+DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
+LOAD_SAMPLE_DATA=false
+```
+
+Do not use SQLite for live customer data on Render Free because Render's free web
+service filesystem is not persistent across redeploys and restarts.
 
 ---
 
@@ -162,7 +175,9 @@ service-center-app/
 ├── main.py
 ```
 
-On first startup, the application imports the sample customer data automatically if the database is empty.
+If `LOAD_SAMPLE_DATA=true`, the application imports the sample customer data
+automatically on startup when the customer table is empty. Set it to `false` on
+production hosts such as Render.
 
 ---
 
@@ -330,7 +345,7 @@ Backend:
 
 * FastAPI
 * SQLAlchemy
-* SQLite
+* SQLite / PostgreSQL
 
 Frontend:
 
